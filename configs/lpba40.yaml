@@ -1,0 +1,96 @@
+dataset_name: LPBA40
+modality: MRI-T1
+anatomy: Brain
+eval_labels:
+- 1
+- 2
+- 3
+- 4
+- 5
+- 6
+- 7
+- 8
+- 9
+- 10
+- 11
+- 12
+- 13
+- 14
+- 15
+- 16
+- 17
+- 18
+- 19
+- 20
+- 21
+- 22
+- 23
+- 24
+- 25
+- 26
+- 27
+- 28
+- 29
+- 30
+- 31
+- 32
+- 33
+- 34
+- 35
+- 36
+- 37
+- 38
+- 39
+- 40
+- 41
+- 42
+- 43
+- 44
+- 45
+- 46
+- 47
+- 48
+- 49
+- 50
+- 51
+- 52
+- 53
+- 54
+lambda_grad: 0.25
+alpha: 0.2
+gamma: 10.0
+model:
+  architecture: ecdp_v6
+  base_c: 4
+  projection_dims:
+  - 16
+  - 48
+  - 48
+  - 48
+  - 48
+  radii:
+  - 2
+  - 2
+  - 2
+  - 3
+  - 3
+  corr_hidden: 64
+  corr_out: 48
+  context_dim: 16
+  gru_hidden: 48
+  recurrent_levels:
+  - 1
+  - 2
+  recurrent_iters:
+  - 3
+  - 2
+  alpha_init: 0.5
+  delta_velocity_limit: 2.0
+  coarse_hidden: 48
+  fine_hidden: 16
+  fine_velocity_limit: 1.0
+  integration_steps: 7
+  fine_levels:
+  - 0
+  l3_context_mode: raw
+  negative_jacobian_limit: 0.000135637526659

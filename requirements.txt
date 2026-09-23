@@ -1,0 +1,5 @@
+torch>=2.0.0
+numpy>=1.21.0
+nibabel>=3.2.0
+scipy>=1.7.0
+pyyaml>=5.4.0

@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Checkpoints and pretrained weights (uploaded separately to Google Drive / GitHub Releases)
+*.pt
+*.pth
+*.bin
+*.onnx
+checkpoints/**/*.pt
+checkpoints/**/*.pth
+
+# Keep checkpoint directory structures
+!checkpoints/**/.gitkeep
+
+# Data & results
+results/
+experiments/
+*.nii
+*.nii.gz
+*.npy
+*.npz
+
+# Distribution & packaging
+build/
+dist/
+*.egg-info/
+
+# Environments & editor files
+.venv/
+env/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
