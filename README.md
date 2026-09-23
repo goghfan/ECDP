@@ -20,7 +20,6 @@ This repository provides the official implementation and optimal pretrained mode
 - [Python API Usage](#-python-api-usage)
 - [Benchmarking & Evaluation](#-benchmarking--evaluation)
 - [Training & Fine-Tuning](#-training--fine-tuning)
-- [Citation](#-citation)
 - [License](#-license)
 
 ---
@@ -183,20 +182,6 @@ Verified checkpoint: checkpoints/abdomen_ctct/ecdp_best.pt (strict=True)
 ...
 Ran 3 tests in 1.48s
 OK
-```
-
----
-
-## 📜 Citation
-
-If you use ECDP or this codebase in your research, please cite:
-
-```bibtex
-@article{ecdp2026,
-  title={Evidence-Calibrated Displacement Pyramids for Deformable Medical Image Registration},
-  author={ECDP Authors},
-  year={2026}
-}
 ```
 
 ---
