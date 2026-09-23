@@ -43,7 +43,7 @@ Deformable medical image registration is central to image-guided radiotherapy, s
 
 The pretrained model checkpoints can be downloaded from [Google Drive (Coming Soon)] or [GitHub Releases](https://github.com/goghfan/ECDP/releases), and placed into the corresponding `checkpoints/` directories:
 
-| Dataset | Modality | Anatomy | Model | DSC (%) ↑ | $\text{Neg}(|J_\phi| \le 0)$ (%) ↓ | Parameters | Checkpoint Path |
+| Dataset | Modality | Anatomy | Model | DSC (%) ↑ | $\text{Neg}(\lvert J_\phi \rvert \le 0)$ (%) ↓ | Parameters | Checkpoint Path |
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
 | **Abdomen CT-CT** | CT | Abdomen (13 organs) | **ECDP (Ours)** | **52.56** | **0.0466** | 3.24M | `checkpoints/abdomen_ctct/ecdp_best.pt` |
 | Abdomen CT-CT | CT | Abdomen (13 organs) | EDDP Baseline | 51.86 | 0.0320 | 3.23M | `checkpoints/abdomen_ctct/eddp_baseline.pt` |
