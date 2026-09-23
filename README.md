@@ -5,9 +5,8 @@
 [![Parameters](https://img.shields.io/badge/Parameters-3.232M-green.svg)]()
 [![Inference Time](https://img.shields.io/badge/Inference-393.13ms-brightgreen.svg)]()
 
-This repository provides the official implementation and optimal pretrained model weights for the paper:
-> **Evidence-Calibrated Displacement Pyramids for Deformable Medical Image Registration**  
-> *IEEE Transactions on Medical Imaging (TMI)*
+This repository provides the official implementation and optimal pretrained model weights for:
+> **Evidence-Calibrated Displacement Pyramids for Deformable Medical Image Registration**
 
 ---
 
@@ -193,10 +192,9 @@ OK
 If you use ECDP or this codebase in your research, please cite:
 
 ```bibtex
-@article{ecdp2026tmi,
+@article{ecdp2026,
   title={Evidence-Calibrated Displacement Pyramids for Deformable Medical Image Registration},
   author={ECDP Authors},
-  journal={IEEE Transactions on Medical Imaging},
   year={2026}
 }
 ```
