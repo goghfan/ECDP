@@ -17,6 +17,5 @@ checkpoints/
 
 ## Download Links
 
-Download the pretrained weights from Google Drive or GitHub Releases and place the `.pt` files into their corresponding directories above:
+Download the pretrained weights from Google Drive and place the `.pt` files into their corresponding directories above:
 - **Google Drive**: [ECDP Pretrained Checkpoints](https://drive.google.com/drive/folders/1kuBD0TDpgpmdYJEnXTW1_Pvh0HdhGJhw?usp=sharing)
-- **GitHub Releases**: `https://github.com/goghfan/ECDP/releases`

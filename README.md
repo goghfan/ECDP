@@ -40,7 +40,7 @@ Deformable medical image registration is central to image-guided radiotherapy, s
 
 ## 📊 Pretrained Checkpoints & Benchmark Results
 
-The pretrained model checkpoints can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1kuBD0TDpgpmdYJEnXTW1_Pvh0HdhGJhw?usp=sharing) or [GitHub Releases](https://github.com/goghfan/ECDP/releases), and placed into the corresponding `checkpoints/` directories:
+The pretrained model checkpoints can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1kuBD0TDpgpmdYJEnXTW1_Pvh0HdhGJhw?usp=sharing) and placed into the corresponding `checkpoints/` directories:
 
 | Dataset | Modality | Anatomy | Model | DSC (%) ↑ | $\text{Neg}(\lvert J_\phi \rvert \le 0)$ (%) ↓ | Parameters | Checkpoint Path |
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
