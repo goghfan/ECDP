@@ -2,7 +2,7 @@
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Parameters](https://img.shields.io/badge/Parameters-3.232M-green.svg)]()
+[![Parameters](https://img.shields.io/badge/Parameters-3.24M-green.svg)]()
 [![Inference Time](https://img.shields.io/badge/Inference-393.13ms-brightgreen.svg)]()
 
 This repository provides the official implementation and optimal pretrained model weights for:
@@ -26,11 +26,11 @@ This repository provides the official implementation and optimal pretrained mode
 
 ## 🌟 Overview
 
-Deformable medical image registration is central to image-guided radiotherapy, surgical navigation, and longitudinal disease monitoring. While recent deep learning frameworks demonstrate remarkable registration speed, fine-scale deformations frequently suffer from **Scale-Inconsistent Coordinate Drift (SICD)**: localized updates that improve apparent photometric similarity while inadvertently causing anatomical distortion or catastrophic topological folding.
+Deformable medical image registration is central to image-guided radiotherapy, surgical navigation, and longitudinal disease monitoring. While recent deep learning frameworks demonstrate remarkable registration speed, fine-scale deformations frequently suffer from **Similarity-Induced Correspondence Drift (SICD)**: localized updates that improve apparent photometric similarity while inadvertently causing anatomical distortion or catastrophic topological folding.
 
 **ECDP** addresses this challenge through:
 1. **Multi-Scale Correlation-Driven Displacement Pyramids**: A 5-scale coarse-to-fine registration backbone driven by 3D local correlation volumes and recurrent ConvGRU velocity updates.
-2. **Prospective Evidence-based Local Evidence Routing (PE-LER)**: Evaluates candidate residual updates on full-resolution local descriptor similarity prior to velocity compounding, dynamically arbitrating updates via signed identity routing:
+2. **Preview-Evaluated Local Evidence Routing (PE-LER)**: Evaluates candidate residual updates on full-resolution local descriptor similarity prior to velocity compounding, dynamically arbitrating updates via signed identity routing:
    $$\Delta S = S_{\text{cand}} - S_{\text{base}}$$
    $$G = \text{clamp}(1 + \alpha \cdot g_{\text{error}} \cdot \tanh(\gamma \cdot \Delta S), 0, 2)$$
    where $\alpha = 0.20$ and $\gamma = 10.0$.
@@ -42,14 +42,14 @@ Deformable medical image registration is central to image-guided radiotherapy, s
 
 The pretrained model checkpoints can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1kuBD0TDpgpmdYJEnXTW1_Pvh0HdhGJhw?usp=sharing) and placed into the corresponding `checkpoints/` directories:
 
-| Dataset | Modality | Anatomy | Model | DSC (%) ↑ | $\text{Neg}(\lvert J_\phi \rvert \le 0)$ (%) ↓ | Parameters | Checkpoint Path |
-| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
-| **Abdomen CT-CT** | CT | Abdomen (13 organs) | **ECDP (Ours)** | **52.56** | **0.0466** | 3.24M | `checkpoints/abdomen_ctct/ecdp_best.pt` |
-| Abdomen CT-CT | CT | Abdomen (13 organs) | EDDP Baseline | 51.86 | 0.0320 | 3.23M | `checkpoints/abdomen_ctct/eddp_baseline.pt` |
-| **IXI** | MRI-T1 | Brain (30 structures) | **ECDP (Ours)** | **75.34** | **0.00026** | 3.24M | `checkpoints/ixi/ecdp_best.pt` |
-| IXI | MRI-T1 | Brain (30 structures) | EDDP Baseline | 74.80 | 0.00017 | 3.23M | `checkpoints/ixi/eddp_baseline.pt` |
-| **LPBA40** | MRI-T1 | Brain (54 structures) | **ECDP (Ours)** | **73.84** | **0.0024** | 3.24M | `checkpoints/lpba40/ecdp_best.pt` |
-| LPBA40 | MRI-T1 | Brain (54 structures) | EDDP Baseline | 73.20 | 0.0038 | 3.23M | `checkpoints/lpba40/eddp_baseline.pt` |
+| Dataset | Modality | Anatomy | Model | DSC (%) ↑ | ASSD (mm) ↓ | HD95 (mm) ↓ | $\text{Neg}(\lvert J_\phi \rvert \le 0)$ (%) ↓ | Parameters | Checkpoint Path |
+| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Abdomen CT-CT** | CT | Abdomen (13 organs) | **ECDP (Ours)** | **53.15** | **3.695** | **12.593** | **0.049** | 3.24M | checkpoints/abdomen_ctct/ecdp_best.pt |
+| Abdomen CT-CT | CT | Abdomen (13 organs) | EDDP Baseline | 51.59 | 3.836 | 12.826 | 0.010 | 3.23M | checkpoints/abdomen_ctct/eddp_baseline.pt |
+| **IXI** | MRI-T1 | Brain (30 structures) | **ECDP (Ours)** | **76.00** | **0.952** | **2.731** | **<0.001** | 3.24M | checkpoints/ixi/ecdp_best.pt |
+| IXI | MRI-T1 | Brain (30 structures) | EDDP Baseline | 75.92 | 0.958 | 2.754 | <0.001 | 3.23M | checkpoints/ixi/eddp_baseline.pt |
+| **LPBA40** | MRI-T1 | Brain (54 structures) | **ECDP (Ours)** | **74.02** | **1.501** | **5.330** | **<0.001** | 3.24M | checkpoints/lpba40/ecdp_best.pt |
+| LPBA40 | MRI-T1 | Brain (54 structures) | EDDP Baseline | 73.98 | 1.502 | 5.344 | <0.001 | 3.23M | checkpoints/lpba40/eddp_baseline.pt |
 
 *Note: All checkpoints are clean PyTorch serialized files strictly verified against official benchmark numbers. See [checkpoints/README.md](checkpoints/README.md) for detailed download and placement instructions.*
 
