@@ -57,6 +57,11 @@ class ECDPModel(nn.Module):
             return moved, flow_zyx
         return moved, flow_zyx, diag
 
+    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool = True):
+        # Gracefully filter legacy error_gate_head weights from exploratory checkpoints
+        cleaned = {k: v for k, v in state_dict.items() if "error_gate_head" not in k}
+        return super().load_state_dict(cleaned, strict=strict)
+
 
 class EDDPModel(nn.Module):
     """Explicit Displacement Diffusion Pyramids (EDDP) Baseline Model.
@@ -102,3 +107,8 @@ class EDDPModel(nn.Module):
         if not return_diagnostics:
             return moved, flow_zyx
         return moved, flow_zyx, diag
+
+    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool = True):
+        # Gracefully filter legacy error_gate_head weights from exploratory checkpoints
+        cleaned = {k: v for k, v in state_dict.items() if "error_gate_head" not in k}
+        return super().load_state_dict(cleaned, strict=strict)

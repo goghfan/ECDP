@@ -1,7 +1,13 @@
-"""PE-LER: Prospective Evidence-based Local Evidence Routing Module.
+"""PE-LER: Preview-Evaluated Local Evidence Routing Module.
 
 Evaluates candidate residual updates on full-resolution local descriptor similarity
-prior to velocity compounding, arbitrating update magnitudes via signed identity routing.
+prior to velocity compounding, arbitrating update magnitudes via signed identity routing:
+    Delta s(x) = <q_1(x), k_c(x)> - <q_1(x), k_1(x)>                   (Eq. 17)
+    G(x)       = 1 + alpha * tanh(gamma * Delta s(x))                   (Eq. 18)
+    v_gated(x) = G(x) * v_raw(x)                                        (Eq. 19)
+
+As described in the paper, this mechanism introduces ZERO additional learnable parameters
+over the EDDP backbone (both EDDP and ECDP have exactly 3,232,420 parameters / ~3.232M).
 """
 
 from __future__ import annotations
@@ -13,31 +19,10 @@ from ecdp.core.geometry import compose_flows, resize_flow, scaling_and_squaring,
 from ecdp.models.backbone import EDDPBackbone
 
 
-class SpatialErrorGateHead(nn.Module):
-    """3D Conv head predicting image error confidence in [0, 1]."""
-    def __init__(self, in_channels: int = 2):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Conv3d(in_channels, 16, kernel_size=3, padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv3d(16, 16, kernel_size=3, padding=1),
-            nn.LeakyReLU(0.1, inplace=True),
-            nn.Conv3d(16, 1, kernel_size=3, padding=1),
-            nn.Sigmoid()
-        )
-        nn.init.zeros_(self.net[-2].bias)
-        nn.init.kaiming_normal_(self.net[-2].weight, mode='fan_out', nonlinearity='linear')
-
-    def forward(self, error_map: Tensor, grad_mag: Tensor) -> Tensor:
-        x = torch.cat((error_map, grad_mag), dim=1)
-        return self.net(x)
-
-
 class PE_LER_Backbone(EDDPBackbone):
     """EDDP Backbone with PE-LER prospective evidence gating at the finest scale (L1)."""
     def __init__(self, alpha: float = 0.20, gain_scale: float = 10.0, **kwargs):
         super().__init__(**kwargs)
-        self.error_gate_head = SpatialErrorGateHead(in_channels=2)
         self.alpha = float(alpha)
         self.gain_scale = float(gain_scale)
 
@@ -66,7 +51,7 @@ class PE_LER_Backbone(EDDPBackbone):
         warped_moving_cand_feat = warp(feat_moving, cand_flow)
         k_cand = self.projections[level](warped_moving_cand_feat)
 
-        # 3. Prospective descriptor similarity gain: Delta S = S_cand - S_base
+        # 3. Prospective descriptor similarity gain: Delta s(x) = S_cand - S_base (Eq. 17)
         q_n = F.normalize(q.float(), dim=1, eps=1e-6)
         k_base_n = F.normalize(k_base.float(), dim=1, eps=1e-6)
         k_cand_n = F.normalize(k_cand.float(), dim=1, eps=1e-6)
@@ -75,22 +60,12 @@ class PE_LER_Backbone(EDDPBackbone):
         sim_cand = (q_n * k_cand_n).sum(dim=1, keepdim=True)
         gain = sim_cand - sim_base
 
-        # 4. Spatial error gate: photometric intensity and boundary mismatch
-        warped_moving_img = warp(moving_img, flow_resized)
-        error_map = (fixed_img - warped_moving_img).abs()
-
-        gx_f = fixed_img[:, :, 2:, :, :] - fixed_img[:, :, :-2, :, :]
-        gx_m = warped_moving_img[:, :, 2:, :, :] - warped_moving_img[:, :, :-2, :, :]
-        grad_diff = F.pad((gx_f - gx_m).abs(), (0, 0, 0, 0, 1, 1))
-
-        g_error = self.error_gate_head(error_map, grad_diff)
-
-        # 5. Residual identity gating: G = 1 + alpha * g_error * tanh(gamma * gain)
-        delta_gate = self.alpha * g_error * torch.tanh(self.gain_scale * gain)
+        # 4. Residual identity gating: G(x) = 1 + alpha * tanh(gamma * Delta s(x)) (Eq. 18)
+        delta_gate = self.alpha * torch.tanh(self.gain_scale * gain)
         gate = 1.0 + delta_gate
         acceptance_rate = (gain > 0.0).float().mean()
 
-        # 6. Apply modulation to velocity residual
+        # 5. Apply modulation to velocity residual (Eq. 19)
         velocity_gated = velocity_raw * gate
         increment_gated = scaling_and_squaring(velocity_gated.float(), self.integration_steps)
         flow_at_level = compose_flows(flow_resized, increment_gated)

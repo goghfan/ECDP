@@ -22,9 +22,9 @@ class TestECDP(unittest.TestCase):
         eddp = EDDPModel(self.cfg["model"]).to(self.device)
         n_ecdp = sum(p.numel() for p in ecdp.parameters() if p.requires_grad)
         n_eddp = sum(p.numel() for p in eddp.parameters() if p.requires_grad)
-        print("ECDP trainable parameters:", n_ecdp, "(~3.24M)")
-        print("EDDP trainable parameters:", n_eddp, "(~3.23M)")
-        self.assertEqual(n_ecdp, 3240661)
+        print("ECDP trainable parameters:", n_ecdp, "(~3.232M)")
+        print("EDDP trainable parameters:", n_eddp, "(~3.232M)")
+        self.assertEqual(n_ecdp, 3232420)
         self.assertEqual(n_eddp, 3232420)
 
     def test_forward_pass_and_diagnostics(self):

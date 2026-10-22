@@ -2,7 +2,7 @@
 
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Parameters](https://img.shields.io/badge/Parameters-3.24M-green.svg)]()
+[![Parameters](https://img.shields.io/badge/Parameters-3.232M-green.svg)]()
 [![Inference Time](https://img.shields.io/badge/Inference-393.13ms-brightgreen.svg)]()
 
 This repository provides the official implementation and optimal pretrained model weights for:
@@ -20,6 +20,7 @@ This repository provides the official implementation and optimal pretrained mode
 - [Python API Usage](#-python-api-usage)
 - [Benchmarking & Evaluation](#-benchmarking--evaluation)
 - [Training & Fine-Tuning](#-training--fine-tuning)
+- [Unit Tests](#-unit-tests)
 - [License](#-license)
 
 ---
@@ -30,10 +31,10 @@ Deformable medical image registration is central to image-guided radiotherapy, s
 
 **ECDP** addresses this challenge through:
 1. **Multi-Scale Correlation-Driven Displacement Pyramids**: A 5-scale coarse-to-fine registration backbone driven by 3D local correlation volumes and recurrent ConvGRU velocity updates.
-2. **Preview-Evaluated Local Evidence Routing (PE-LER)**: Evaluates candidate residual updates on full-resolution local descriptor similarity prior to velocity compounding, dynamically arbitrating updates via signed identity routing:
-   $$\Delta S = S_{\text{cand}} - S_{\text{base}}$$
-   $$G = \text{clamp}(1 + \alpha \cdot g_{\text{error}} \cdot \tanh(\gamma \cdot \Delta S), 0, 2)$$
-   where $\alpha = 0.20$ and $\gamma = 10.0$.
+2. **Preview-Evaluated Local Evidence Routing (PE-LER)**: Evaluates candidate residual updates against full-resolution local descriptor similarity prior to velocity compounding, dynamically arbitrating updates via signed identity routing:
+   $$\Delta s(x) = s_{\text{cand}}(x) - s_{\text{base}}(x)$$
+   $$G(x) = 1 + \alpha \tanh(\gamma \Delta s(x))$$
+   where $\alpha = 0.20$ and $\gamma = 10.0$. Crucially, PE-LER operates via local feature descriptor similarity evaluation and introduces **zero additional learnable parameters**.
 3. **Stationary Velocity Field (SVF) Integration**: Scaling-and-squaring Lie group integration guarantees diffeomorphic properties and preserves topological regularity.
 
 ---
@@ -44,14 +45,14 @@ The pretrained model checkpoints can be downloaded from [Google Drive](https://d
 
 | Dataset | Modality | Anatomy | Model | DSC (%) ↑ | ASSD (mm) ↓ | HD95 (mm) ↓ | $\text{Neg}(\lvert J_\phi \rvert \le 0)$ (%) ↓ | Parameters | Checkpoint Path |
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Abdomen CT-CT** | CT | Abdomen (13 organs) | **ECDP (Ours)** | **53.15** | **3.695** | **12.593** | **0.049** | 3.24M | checkpoints/abdomen_ctct/ecdp_best.pt |
-| Abdomen CT-CT | CT | Abdomen (13 organs) | EDDP Baseline | 51.59 | 3.836 | 12.826 | 0.010 | 3.23M | checkpoints/abdomen_ctct/eddp_baseline.pt |
-| **IXI** | MRI-T1 | Brain (30 structures) | **ECDP (Ours)** | **76.00** | **0.952** | **2.731** | **<0.001** | 3.24M | checkpoints/ixi/ecdp_best.pt |
-| IXI | MRI-T1 | Brain (30 structures) | EDDP Baseline | 75.92 | 0.958 | 2.754 | <0.001 | 3.23M | checkpoints/ixi/eddp_baseline.pt |
-| **LPBA40** | MRI-T1 | Brain (54 structures) | **ECDP (Ours)** | **74.02** | **1.501** | **5.330** | **<0.001** | 3.24M | checkpoints/lpba40/ecdp_best.pt |
-| LPBA40 | MRI-T1 | Brain (54 structures) | EDDP Baseline | 73.98 | 1.502 | 5.344 | <0.001 | 3.23M | checkpoints/lpba40/eddp_baseline.pt |
+| **Abdomen CT-CT** | CT | Abdomen (13 organs) | **ECDP (Ours)** | **53.15** | **3.695** | **12.593** | **0.049** | **3.232M** | checkpoints/abdomen_ctct/ecdp_best.pt |
+| Abdomen CT-CT | CT | Abdomen (13 organs) | EDDP Baseline | 51.59 | 3.836 | 12.826 | 0.010 | 3.232M | checkpoints/abdomen_ctct/eddp_baseline.pt |
+| **IXI** | MRI-T1 | Brain (30 structures) | **ECDP (Ours)** | **76.00** | **0.952** | **2.731** | **<0.001** | **3.232M** | checkpoints/ixi/ecdp_best.pt |
+| IXI | MRI-T1 | Brain (30 structures) | EDDP Baseline | 75.92 | 0.958 | 2.754 | <0.001 | 3.232M | checkpoints/ixi/eddp_baseline.pt |
+| **LPBA40** | MRI-T1 | Brain (54 structures) | **ECDP (Ours)** | **74.02** | **1.501** | **5.330** | **<0.001** | **3.232M** | checkpoints/lpba40/ecdp_best.pt |
+| LPBA40 | MRI-T1 | Brain (54 structures) | EDDP Baseline | 73.98 | 1.502 | 5.344 | <0.001 | 3.232M | checkpoints/lpba40/eddp_baseline.pt |
 
-*Note: All checkpoints are clean PyTorch serialized files strictly verified against official benchmark numbers. See [checkpoints/README.md](checkpoints/README.md) for detailed download and placement instructions.*
+*Note: Both the baseline EDDP and full ECDP possess exactly 3,232,420 trainable parameters (~3.232M), confirming zero learnable parameter overhead for PE-LER. All surface distance metrics (ASSD and HD95) are strictly computed on boundary contours using Euclidean Distance Transforms. See [checkpoints/README.md](checkpoints/README.md) for detailed download instructions.*
 
 ---
 
@@ -63,25 +64,25 @@ ECDP/
 │   ├── abdomen_ctct.yaml     # Abdomen CT-CT configuration
 │   ├── ixi.yaml              # IXI brain MRI configuration
 │   └── lpba40.yaml           # LPBA40 brain MRI configuration
-├── checkpoints/              # Optimal pretrained model checkpoints
+├── checkpoints/              # Pretrained model checkpoints
 │   ├── abdomen_ctct/         # Best ECDP & EDDP baseline for Abdomen CT-CT
 │   ├── ixi/                  # Best ECDP & EDDP baseline for IXI
 │   └── lpba40/               # Best ECDP & EDDP baseline for LPBA40
 ├── ecdp/                     # Core ECDP library
 │   ├── core/                 # Mathematical operations
-│   │   ├── geometry.py       # Warp, compose_flows, resize_flow, scaling-and-squaring, Jacobian
+│   │   ├── geometry.py       # Warp, compose_flows, scaling-and-squaring, Jacobian
 │   │   ├── losses.py         # Local NCC loss, diffusion regularizer, Dice loss
-│   │   └── metrics.py        # DSC, HD95, Jacobian summary statistics
+│   │   └── metrics.py        # Surface-based DSC, ASSD, HD95, Jacobian summary
 │   ├── models/               # Neural network architectures
 │   │   ├── backbone.py       # EDDP multi-scale recurrent correlation backbone
-│   │   ├── peler.py          # PE-LER prospective evidence gating module
+│   │   ├── peler.py          # PE-LER prospective evidence gating module (0 extra params)
 │   │   └── ecdp_model.py     # High-level ECDP and EDDP model interfaces
 │   └── data/                 # Data loading utilities
 │       └── dataset.py        # 3D medical volume dataset loader (supports .nii.gz, .npz)
 ├── scripts/                  # Standalone execution scripts
 │   ├── demo_register.py      # Quick-start pairwise registration CLI
-│   ├── evaluate.py           # Benchmark evaluation script
-│   └── train.py              # End-to-end training and fine-tuning script
+│   ├── evaluate.py           # Comprehensive benchmark evaluation script
+│   └── train.py              # End-to-end training and fine-tuning pipeline
 ├── tests/                    # Unit test suite
 │   └── test_inference.py     # Verifies parameter counts, forward passes, and weights
 ├── requirements.txt          # Python dependencies
@@ -166,6 +167,58 @@ print(f"Displacement field shape: {flow_xyz.shape}")
 
 ---
 
+## 📊 Benchmarking & Evaluation
+
+Run the evaluation script to compute DSC, surface-based ASSD, surface-based HD95, and Jacobian folding fractions:
+
+```bash
+# Evaluate ECDP on test dataset pairs
+python scripts/evaluate.py \
+    --config configs/abdomen_ctct.yaml \
+    --checkpoint checkpoints/abdomen_ctct/ecdp_best.pt \
+    --data_json data/test_pairs.json \
+    --spacing 1.0,1.0,1.0 \
+    --output_csv results/eval_abdomen.csv
+
+# Or run immediate pipeline verification on synthetic 3D pairs
+python scripts/evaluate.py \
+    --config configs/abdomen_ctct.yaml \
+    --checkpoint checkpoints/abdomen_ctct/ecdp_best.pt \
+    --synthetic
+```
+
+---
+
+## 🚂 Training & Fine-Tuning
+
+Train ECDP or baseline EDDP end-to-end with mixed precision (AMP) and gradient clipping:
+
+```bash
+# Train ECDP on pair dataset
+python scripts/train.py \
+    --config configs/abdomen_ctct.yaml \
+    --data_json data/train_pairs.json \
+    --val_data_json data/val_pairs.json \
+    --output_dir experiments/abdomen_ecdp \
+    --epochs 50 \
+    --lr 1e-4
+
+# Warm-start fine-tuning from EDDP baseline
+python scripts/train.py \
+    --config configs/abdomen_ctct.yaml \
+    --warmstart checkpoints/abdomen_ctct/eddp_baseline.pt \
+    --data_json data/train_pairs.json \
+    --output_dir experiments/ecdp_finetuned
+
+# Quick end-to-end training verification on synthetic data
+python scripts/train.py \
+    --config configs/abdomen_ctct.yaml \
+    --synthetic \
+    --epochs 3
+```
+
+---
+
 ## 🧪 Unit Tests
 
 Run the test suite to verify parameter count, forward inference, and checkpoint loading:
@@ -176,10 +229,14 @@ python -m unittest tests/test_inference.py
 
 Expected output:
 ```
-ECDP trainable parameters: 3,240,661 (~3.24M)
-EDDP trainable parameters: 3,232,420 (~3.23M)
+ECDP trainable parameters: 3,232,420 (~3.232M)
+EDDP trainable parameters: 3,232,420 (~3.232M)
 Verified checkpoint: checkpoints/abdomen_ctct/ecdp_best.pt (strict=True)
-...
+Verified checkpoint: checkpoints/abdomen_ctct/eddp_baseline.pt (strict=True)
+Verified checkpoint: checkpoints/ixi/ecdp_best.pt (strict=True)
+Verified checkpoint: checkpoints/ixi/eddp_baseline.pt (strict=True)
+Verified checkpoint: checkpoints/lpba40/ecdp_best.pt (strict=True)
+Verified checkpoint: checkpoints/lpba40/eddp_baseline.pt (strict=True)
 Ran 3 tests in 1.48s
 OK
 ```

@@ -11,12 +11,17 @@ Usage:
         --output_dir results/
 """
 
+import sys
 import argparse
 import pathlib
 import yaml
 import torch
 import nibabel as nib
 import numpy as np
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from ecdp import ECDPModel, warp
 from ecdp.data.dataset import load_nifti_or_npz

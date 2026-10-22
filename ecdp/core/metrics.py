@@ -1,4 +1,4 @@
-"""Evaluation metrics: Dice Similarity Coefficient, Hausdorff Distance, and Jacobian regularity."""
+"""Evaluation metrics: Dice Similarity Coefficient, Surface Distances (ASSD, HD95), and Jacobian regularity."""
 
 from __future__ import annotations
 from dataclasses import dataclass
@@ -6,7 +6,7 @@ from typing import Sequence
 import numpy as np
 import torch
 from torch import Tensor
-from scipy.ndimage import distance_transform_edt
+from scipy.ndimage import distance_transform_edt, binary_erosion
 from .geometry import jacobian_determinant
 
 
@@ -55,27 +55,87 @@ def jacobian_summary(flow_xyz: Tensor, epsilon: float = 1e-6) -> dict[str, Tenso
     }
 
 
+def extract_surface_border(mask: np.ndarray) -> np.ndarray:
+    """Extract 1-voxel binary surface boundary of a 3D binary volume."""
+    if not np.any(mask):
+        return np.zeros_like(mask, dtype=bool)
+    eroded = binary_erosion(mask)
+    return mask ^ eroded
+
+
+def compute_surface_distances(
+    pred_bin: np.ndarray,
+    target_bin: np.ndarray,
+    voxel_spacing: Sequence[float] = (1.0, 1.0, 1.0),
+) -> tuple[np.ndarray, np.ndarray]:
+    """Compute symmetric surface point-to-point distances in millimeters.
+
+    Uses the standard surface contour extraction (mask XOR eroded_mask) followed
+    by Euclidean Distance Transform on the complementary volume.
+    """
+    pred_border = extract_surface_border(pred_bin)
+    target_border = extract_surface_border(target_bin)
+
+    if not np.any(pred_border) or not np.any(target_border):
+        return np.array([]), np.array([])
+
+    dt_target = distance_transform_edt(~target_border, sampling=voxel_spacing)
+    dt_pred = distance_transform_edt(~pred_border, sampling=voxel_spacing)
+
+    d_pred_to_target = dt_target[pred_border]
+    d_target_to_pred = dt_pred[target_border]
+    return d_pred_to_target, d_target_to_pred
+
+
 def compute_hd95(
     pred: np.ndarray,
     target: np.ndarray,
     labels: Sequence[int],
     voxel_spacing: Sequence[float] = (1.0, 1.0, 1.0),
 ) -> float:
-    """Compute 95th percentile Hausdorff Distance (HD95) in mm across structures."""
+    """Compute standard 95th percentile Hausdorff Distance (HD95) in mm across structures.
+
+    Strictly evaluates distances on the surface boundary points, consistent with MedIA / IEEE TMI.
+    """
     hd95_list = []
     for label in labels:
-        pred_bin = (pred == label)
-        tgt_bin = (target == label)
+        pred_bin = (pred == int(label))
+        tgt_bin = (target == int(label))
         if not np.any(pred_bin) or not np.any(tgt_bin):
             continue
 
-        pred_dist = distance_transform_edt(~pred_bin, sampling=voxel_spacing)
-        tgt_dist = distance_transform_edt(~tgt_bin, sampling=voxel_spacing)
+        d1, d2 = compute_surface_distances(pred_bin, tgt_bin, voxel_spacing)
+        if len(d1) == 0 or len(d2) == 0:
+            continue
 
-        pred_surf_dist = pred_dist[tgt_bin]
-        tgt_surf_dist = tgt_dist[pred_bin]
-
-        all_dists = np.concatenate([pred_surf_dist, tgt_surf_dist])
+        all_dists = np.concatenate([d1, d2])
         hd95_list.append(np.percentile(all_dists, 95))
 
     return float(np.mean(hd95_list)) if hd95_list else float("nan")
+
+
+def compute_assd(
+    pred: np.ndarray,
+    target: np.ndarray,
+    labels: Sequence[int],
+    voxel_spacing: Sequence[float] = (1.0, 1.0, 1.0),
+) -> float:
+    """Compute Average Symmetric Surface Distance (ASSD) in mm across structures.
+
+    Strictly evaluates symmetric distances on the surface boundary points.
+    """
+    assd_list = []
+    for label in labels:
+        pred_bin = (pred == int(label))
+        tgt_bin = (target == int(label))
+        if not np.any(pred_bin) or not np.any(tgt_bin):
+            continue
+
+        d1, d2 = compute_surface_distances(pred_bin, tgt_bin, voxel_spacing)
+        if len(d1) == 0 or len(d2) == 0:
+            continue
+
+        assd_val = float((d1.sum() + d2.sum()) / (len(d1) + len(d2)))
+        assd_list.append(assd_val)
+
+    return float(np.mean(assd_list)) if assd_list else float("nan")
